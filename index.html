@@ -10,6 +10,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <link rel="manifest" href="https://augustineiacopelli.github.io/appaday/manifests/073.webmanifest">
 <script src="https://augustineiacopelli.github.io/appaday/save.js" defer></script>
+<script src="https://augustineiacopelli.github.io/appaday/keys.js" data-app="073" data-legacy-key="fixlens_api_key" data-accent="#1F7A8C" defer></script>
 <title>Explain It Three Ways | AppADay 073</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -578,11 +579,7 @@
       <button id="closeModal" aria-label="Close">&times;</button>
     </div>
     <p class="modal-sub">Your key stays on this device and is sent straight to Anthropic. It is never stored anywhere else.</p>
-    <div class="m-field">
-      <label for="apiKey">Anthropic API key</label>
-      <input type="password" id="apiKey" placeholder="sk-ant-..." autocomplete="off" spellcheck="false">
-      <div class="m-hint">Get one at <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>. Vision + reasoning uses a small amount of credit per diagnosis.</div>
-    </div>
+    <div class="m-field" id="keyMount"><div class="m-hint">The key manager is loading. If this stays, check your connection and reload.</div></div>
     <div class="m-field">
       <label for="modelSel">Model</label>
       <select id="modelSel">
@@ -620,7 +617,6 @@
 'use strict';
 
 const CLAUDE_MODEL = 'claude-sonnet-5';
-const LS_KEY = 'fixlens_api_key';
 const LS_MODEL = 'fixlens_model';
 const MAX_EDGE = 1568;
 
@@ -675,19 +671,16 @@ const scope = $('scope'), scopeInner = $('scopeInner'), placeholder = $('placeho
       modal = $('modal'), toast = $('toast');
 
 // ---- settings ----
-function openModal(){ $('apiKey').value = localStorage.getItem(LS_KEY) || ''; $('modelSel').value = localStorage.getItem(LS_MODEL) || CLAUDE_MODEL; modal.classList.add('open'); }
+function openModal(){ if(window.AppKeys) window.AppKeys.mountSettings($('keyMount')); $('modelSel').value = localStorage.getItem(LS_MODEL) || CLAUDE_MODEL; modal.classList.add('open'); }
 function closeModal(){ modal.classList.remove('open'); }
 $('gearBtn').addEventListener('click', openModal);
 $('closeModal').addEventListener('click', closeModal);
 modal.addEventListener('click', function(e){ if(e.target === modal) closeModal(); });
 $('saveSettings').addEventListener('click', function(){
-  const k = $('apiKey').value.trim();
-  if(k) localStorage.setItem(LS_KEY, k); else localStorage.removeItem(LS_KEY);
   localStorage.setItem(LS_MODEL, $('modelSel').value);
   closeModal();
   showToast('Settings saved.');
 });
-function getKey(){ return localStorage.getItem(LS_KEY) || ''; }
 function getModel(){ return localStorage.getItem(LS_MODEL) || CLAUDE_MODEL; }
 
 // ---- jobs modal wiring ----
@@ -801,7 +794,8 @@ function extractPlan(text){
 
 // ---- API ----
 async function callClaude(userText){
-  const key = getKey();
+  const key = window.AppKeys ? await window.AppKeys.get() : null;
+  if(!key) throw new Error('Add your Claude API key to continue.');
   const body = {
     model: getModel(),
     max_tokens: 8000,
@@ -850,7 +844,6 @@ async function callClaude(userText){
 // ---- diagnose ----
 diagnoseBtn.addEventListener('click', function(){
   if(busy) return;
-  if(!getKey()){ showToast('Add your Anthropic API key in Settings first.', true); openModal(); return; }
   if(!imgData){ showToast('Add a photo of the problem first.', true); return; }
   runDiagnose();
 });
@@ -1354,9 +1347,7 @@ function deleteJob(id){
 }
 
 // first-run nudge
-if(!getKey()){
-  setTimeout(function(){ showToast('Add your Anthropic API key in Settings to begin.'); }, 700);
-}
+setTimeout(function(){ if(window.AppKeys && !window.AppKeys.has()) showToast('Add your Claude API key in Settings to begin.'); }, 900);
 </script>
 </body>
 </html>
