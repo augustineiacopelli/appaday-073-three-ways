@@ -24,9 +24,9 @@ Built around a **prism** metaphor: one concept enters and disperses into three. 
 - Single-file vanilla HTML, CSS, and JavaScript. No frameworks, no build step.
 - Google Fonts (Fraunces, Inter) via CDN; no other external dependencies.
 - Direct browser-to-Anthropic API calls with `anthropic-dangerous-direct-browser-access: true`.
-- `const CLAUDE_MODEL = 'claude-sonnet-5'` default; model selectable in Settings.
+- The current Claude Sonnet model by default, with Opus, Haiku, and Fable selectable in Settings. Model names and IDs come from the portal's models.js, so they stay current without editing this app.
 - Structured JSON response parsed into the three panels; all model text rendered via `textContent`.
-- API key and model live only in the Settings (⚙️) modal, stored in `localStorage`, never committed to source.
+- The API key comes from the shared AppADay key ring (keys.js), managed from the Settings (⚙️) modal; the model choice is stored in `localStorage`. Nothing is committed to source.
 - Responsive from a 375px phone up through desktop; keyboard focus visible; reduced motion respected.
 
 ## Setup
